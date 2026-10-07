@@ -159,22 +159,33 @@ services:
     image: ghcr.io/hotio/qbittorrent:latest
     ports:
       - 8080:8080
-      - 22316:22316
+      # plus besoin d'exposer 22316, le trafic torrent passe par le VPN
     environment:
       - PUID=1000
       - PGID=1000
       - UMASK=002
-      - TZ=Etc/UTC
-      - WEBUI_PORTS=8080/tcp 
+      - TZ=Europe/Paris
+      - WEBUI_PORTS=8080/tcp
       - LIBTORRENT=v1
+      - VPN_ENABLED=true
+      - VPN_CONF=wg0
+      - VPN_PROVIDER=proton
+      - VPN_LAN_NETWORK=192.168.127.0/24   # pour garder l'accès à la WebUI
+      - VPN_AUTO_PORT_FORWARD=true         # récupère le port Proton et le met dans qBittorrent
+      - VPN_AUTO_PORT_FORWARD_TO_PORTS=    # laisser vide: qBittorrent est configuré automatiquement
+      - VPN_HEALTHCHECK_ENABLED=true
+      - PRIVOXY_ENABLED=false
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=1
     volumes:
       - /home/tim/services-configs/plex-auto/qbittorrent:/config
       - /media/hdd01:/data
     networks:
       - plex-auto
       - swag
-    dns:  
-      - 192.168.127.53
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:develop
