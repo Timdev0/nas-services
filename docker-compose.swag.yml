@@ -1,0 +1,38 @@
+services:
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+      TZ: ${TIMEZONE}
+      URL: ${SWAG_DOMAIN}
+      SUBDOMAINS: wildcard
+      VALIDATION: dns
+      DNSPLUGIN: cloudflare
+      EMAIL: ${SWAG_EMAIL}
+    volumes:
+      - /home/tim/services-configs/plex-auto/swag:/config
+    ports:
+      - 443:443
+    restart: unless-stopped
+    networks:
+      - swag
+  
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    environment:
+      TZ: ${TIMEZONE}
+    volumes:
+      - /home/tim/services-configs/plex-auto/authelia:/config
+    restart: unless-stopped
+    networks:
+      - swag
+
+networks:
+  swag:
+    name: swag
+    driver: bridge

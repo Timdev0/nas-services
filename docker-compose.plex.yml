@@ -1,0 +1,251 @@
+services: 
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    restart: unless-stopped
+    init: true
+    environment:
+      LOG_LEVEL: debug
+      TZ: ${TIMEZONE}
+      #PUID: ${USER_ID}
+      #PGID: ${GROUP_ID}
+    volumes:
+      - /home/tim/services-configs/plex-auto/overseerr:/app/config
+    ports:
+        - 5055:5055
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    depends_on:
+      - plex
+    networks:
+      - plex-auto
+      - swag
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+    volumes: 
+      - /home/tim/services-configs/plex-auto/lidarr:/config
+      - /media/hdd01:/data
+    ports:
+     - 8686:8686
+    restart: unless-stopped
+    networks:
+      - plex-auto
+      - swag
+    
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+    volumes:
+      - /home/tim/services-configs/plex-auto/radarr:/config
+      #- /media/hdd01/movies:/movies
+      #- /media/hdd01/download:/download
+      - /media/hdd01:/data
+    ports:
+      - 7878:7878
+    depends_on:
+      - deluge
+      - prowlarr
+    networks:
+      - plex-auto
+      - swag
+  
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+    volumes:
+      - /home/tim/services-configs/plex-auto/sonarr:/config
+      #- /media/hdd01/series:/series
+      #- /media/hdd01/animes:/animes
+      #- /media/hdd01/download:/download
+      - /media/hdd01:/data
+    ports:
+      - 8989:8989
+    depends_on:
+      - deluge
+      - prowlarr
+    networks:
+      - plex-auto
+      - swag
+  
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+    volumes:
+      - /home/tim/services-configs/plex-auto/bazarr:/config
+      - /media/hdd01:/data
+      #- /media/hdd01/series:/series
+      #- /media/hdd01/animes:/animes
+      #- /media/hdd01/movies:/movies
+    ports:
+      - 6767:6767
+    depends_on:
+      - sonarr
+      - radarr
+    networks:
+      - plex-auto
+      - swag
+
+  deluge:
+    image: timdev0/docker-deluge-openvpn:latest
+    container_name: deluge
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+      OPENVPN_PROVIDER: PROTONVPN
+
+      OPENVPN_CONFIG: ch.protonvpn.udp
+      OPENVPN_USERNAME: ${VPN_USER}
+      OPENVPN_PASSWORD: ${VPN_PASS}
+      LOCAL_NETWORK: 192.168.0.0/16
+      DELUGE_INCOMPLETE_DIR: /download # or /dowload/incomplete
+      DELUGE_MOVE_COMPLETED: false
+      #DELUGE_DOWNLOAD_DIR: /download/completed #optional put DELUGE_MOVE_COMPLETED to true
+      DELUGE_COPY_TORRENT: true
+      DELUGE_TORRENT_DIR: /download/torrents #optional put COPY_TORRENT_FILE to true
+      # DELUGE_WATCH_DIR: /download/watch #optional
+      # DELUGE_WEB_PORT: 8112 #optinal
+      # DELUGE_DEAMON_PORT: 58846 #optional
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+     - net.ipv6.conf.all.disable_ipv6=1
+    volumes:
+      - /home/tim/services-configs/plex-auto/deluge:/config
+      - /media/hdd01/download:/download
+
+      - /media/hdd01/concerts:/concerts
+      - /media/hdd01/documentaires:/documentaires
+      - /media/hdd01/movies:/movies
+      - /media/hdd01/series:/series
+      - /media/hdd01/animes:/animes
+      - /media/hdd01/musics:/musics
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+    networks:
+      - plex-auto
+      - swag
+      
+  qbittorrent:
+    container_name: qbittorrent
+    image: ghcr.io/hotio/qbittorrent:latest
+    ports:
+      - 8080:8080
+      - 22316:22316
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Etc/UTC
+      - WEBUI_PORTS=8080/tcp 
+      - LIBTORRENT=v1
+    volumes:
+      - /home/tim/services-configs/plex-auto/qbittorrent:/config
+      - /media/hdd01:/data
+    networks:
+      - plex-auto
+      - swag
+    dns:  
+      - 192.168.127.53
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+      - /home/tim/services-configs/plex-auto/prowlarr:/config
+    ports:
+      - 9696:9696
+    depends_on:
+      - flaresolverr
+    networks:
+    - plex-auto
+    - swag
+
+
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      LOG_LEVEL: info
+      LOG_HTML: false
+      CAPTCHA_SOLVER: none
+      TZ: ${TIMEZONE}
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+    networks:
+      - plex-auto
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    network_mode: host # work only on linux
+    environment:
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+      VERSION: docker
+    volumes:
+      - /home/tim/services-configs/plex-auto/plex:/config
+      - /media/hdd01/concerts:/concerts
+      - /media/hdd01/documentaires:/documentaires
+      - /media/hdd01/movies:/movies
+      - /media/hdd01/series:/series
+      - /media/hdd01/animes:/animes
+      - /media/hdd01/musics:/musics
+    #ports:
+      #- 32400:32400
+      #- 1900:1900/udp
+      #- 3005:3005
+      #- 5352:5353/udp # 5353 used by _mdnsresponder on MAC
+      #- 8324:8324
+      #- 32410:32410/udp
+      #- 32412:32412/udp
+      #- 32413:32413/udp
+      #- 32414:32414/udp
+      #- 32469:32469
+
+networks:
+  plex-auto:
+    name: plex-auto
+    driver: bridge
+  swag:
+    external: true
+    name: swag
+    driver: bridge

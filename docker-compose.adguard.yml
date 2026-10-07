@@ -1,0 +1,27 @@
+services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: adguard
+    restart: unless-stopped
+    volumes:
+      - /home/tim/services-configs/adguardhome/work:/opt/adguardhome/work
+      - /home/tim/services-configs/adguardhome/conf:/opt/adguardhome/conf
+    ports:
+      # plain DNS
+      - 53:53/tcp
+      - 53:53/udp
+      # Admin panel
+      #- 80:80/tcp
+      - 3001:3001/tcp
+
+      #- 443:443/tcp
+      #- 443:443/udp
+      - 3000:3000/tcp
+    networks:
+      swag:
+        ipv4_address: 192.168.127.53
+
+networks:
+  swag:
+    external: true
+    name: swag     

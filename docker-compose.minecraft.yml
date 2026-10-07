@@ -1,0 +1,43 @@
+version: '3'
+services:
+    minecraft:
+        image: timdev0/minecraft-purpur:latest # or e.g. 1.18.1
+        container_name: minecraft
+        restart: unless-stopped
+        ports:
+            - 0.0.0.0:25565:25565
+           # - 0.0.0.0:8123:8123
+        volumes:
+            - /home/tim/services-configs/purpurmc:/data:rw
+        user: 1000:1000
+        environment:
+            - TZ=${TZ}
+            - RAM=${RAM}
+# services:
+# minecraft:
+  # image: ghcr.io/n0r1uno/purpurmc-docker
+#   container_name: minecraft
+  # environment:
+ #    - EULA=true
+  #   - GID=${GID}
+  #   - UID=${UID}
+  #   - VERSION=1.21.1
+  #   - UPDATE=true
+  #   - MEMORY=${RAM}
+  # volumes:
+  #   - /home/tim/services-configs/purpurmc:/data:rw
+  # ports:
+  #   - 0.0.0.0:25565:25565
+   #  - 0.0.0.0:8123:8123
+  # restart: unless-stopped
+#services:
+ #   'minecraft':
+  #      image: buddyspencer/purpur:latest
+  #      container_name: minecraft
+  #      environment:
+   #         - MEMORYSIZE=${RAM}
+   #     volumes:
+    #        - /home/tim/services-configs/purpurmc:/data:rw
+     #   ports:
+       #     - 0.0.0.0:25565:25565
+      #      - 0.0.0.0:8123:8123
