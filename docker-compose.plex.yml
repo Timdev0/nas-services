@@ -156,6 +156,7 @@ services:
       
   qbittorrent:
     container_name: qbittorrent
+    hostname: qbittorrent.internal
     image: ghcr.io/hotio/qbittorrent:latest
     ports:
       - 8080:8080
@@ -172,7 +173,6 @@ services:
       - VPN_PROVIDER=proton
       - VPN_LAN_NETWORK=192.168.127.0/24   # pour garder l'accès à la WebUI
       - VPN_AUTO_PORT_FORWARD=true         # récupère le port Proton et le met dans qBittorrent
-      - VPN_AUTO_PORT_FORWARD_TO_PORTS=    # laisser vide: qBittorrent est configuré automatiquement
       - VPN_HEALTHCHECK_ENABLED=true
       - PRIVOXY_ENABLED=false
     cap_add:
@@ -251,6 +251,31 @@ services:
       #- 32413:32413/udp
       #- 32414:32414/udp
       #- 32469:32469
+
+  slskd:
+    image: slskd/slskd:latest # Image compatible ARM64 (Pi 5)
+    container_name: slskd
+    restart: unless-stopped
+    user: ${USER_ID}:${GROUP_ID}
+    environment:
+      SLSKD_REMOTE_CONFIGURATION: true # Permet de configurer l'app via le navigateur
+      SLSKD_USERNAME: ${SLSKD_USER}
+      SLSKD_PASSWORD: ${SLSKD_PASS}
+      SLSKD_SLSK_USERNAME: ${SOULSEEK_USER}
+      SLSKD_SLSK_PASSWORD: ${SOULSEEK_PASS}
+      SLSKD_INCOMPLETE_DIR: /data/download/slskd/incomplete
+      SLSKD_DOWNLOADS_DIR: /data/download/slskd/complete
+      SLSKD_SHARED_DIR: /data/musics
+    volumes:
+      - /home/tim/services-configs/plex-auto/slskd:/app
+      - /media/hdd01:/data
+    ports:
+      - 5030:5030/tcp
+      - 5031:5031/tcp
+      - 50300:50300/tcp
+    networks:
+      - plex-auto
+      - swag
 
 networks:
   plex-auto:
