@@ -26,7 +26,7 @@ services:
       - swag
 
   lidarr:
-    image: lscr.io/linuxserver/lidarr:latest
+    image: lscr.io/linuxserver/lidarr:nightly
     container_name: lidarr
     environment:
       TZ: ${TIMEZONE}
@@ -263,6 +263,7 @@ services:
       SLSKD_PASSWORD: ${SLSKD_PASS}
       SLSKD_SLSK_USERNAME: ${SOULSEEK_USER}
       SLSKD_SLSK_PASSWORD: ${SOULSEEK_PASS}
+      SLSKD_API_KEY: ${SLSKD_API_KEY}
       SLSKD_INCOMPLETE_DIR: /data/download/slskd/incomplete
       SLSKD_DOWNLOADS_DIR: /data/download/slskd/complete
       SLSKD_SHARED_DIR: /data/musics
