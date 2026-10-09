@@ -278,6 +278,43 @@ services:
       - plex-auto
       - swag
 
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    restart: unless-stopped
+    user: ${USER_ID}:${GROUP_ID}
+    environment:
+      TZ: ${TIMEZONE}
+      ND_SCANNER_PURGEMISSING: always
+    volumes:
+      - /home/tim/services-configs/plex-auto/navidrome:/data
+      - /media/hdd01/musics:/music:ro
+      - /media/hdd01/download/aurral:/media/hdd01/download/aurral:ro
+    ports:
+      - 4533:4533
+    networks:
+      - plex-auto
+      - swag
+  
+  aurral:
+    image: ghcr.io/lklynet/aurral:latest
+    container_name: aurral
+    restart: unless-stopped
+    environment:
+      PUID: ${USER_ID}
+      PGID: ${GROUP_ID}
+      TZ: ${TIMEZONE}
+      DOWNLOAD_FOLDER: /media/hdd01/download/aurral
+    volumes:
+      - /home/tim/services-configs/plex-auto/aurral:/app/backend/data
+      - /media/hdd01/musics:/data/musics:ro
+      - /media/hdd01/download/aurral:/app/downloads
+    ports:
+      - 3002:3001
+    networks:
+      - plex-auto
+      - swag
+
 networks:
   plex-auto:
     name: plex-auto
